@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:accountsdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    driverClassName: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        default_schema: sch_accounts
+        hbm2ddl:
+          create_namespaces: true
+    show-sql: false

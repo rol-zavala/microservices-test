@@ -1,0 +1,80 @@
+version: '3.9'
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: ${HOST_PG}
+    environment:
+      POSTGRES_USER: ${USER_PG}
+      POSTGRES_PASSWORD: ${PASS_PG}
+      POSTGRES_DB: ${NAME_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${USER_PG}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - test-devsu-network
+  pgadmin:
+    image: dpage/pgadmin4:7
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - "8080:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    networks:
+      - test-devsu-network
+  account-transaction-service:
+    #image: ${HOST_ACCOUNT_TRANSACTION_SERVICE}/devsu
+    build: ./account-transaction-service
+    container_name: ${HOST_ACCOUNT_TRANSACTION_SERVICE}
+    environment:
+      HOST_PG: ${HOST_PG}
+      PORT_PG: ${PORT_PG}
+      NAME_DB: ${NAME_DB}
+      USER_PG: ${USER_PG}
+      PASS_PG: ${PASS_PG}
+      DEFAULT_SCHEMA: ${DEFAULT_SCHEMA_ACCOUNTS}
+      HOST_CUSTOMER_PEOPLE_SERVICE: ${HOST_CUSTOMER_PEOPLE_SERVICE}
+      PORT_CUSTOMER_PEOPLE_SERVICE: ${PORT_CUSTOMER_PEOPLE_SERVICE}
+    ports:
+      - "${PORT_ACCOUNT_TRANSACTION_SERVICE}:${PORT_ACCOUNT_TRANSACTION_SERVICE}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - test-devsu-network
+  customer-people-service:
+    #image: ${HOST_CUSTOMER_PEOPLE_SERVICE}/devsu
+    build: ./customer-people-service
+    container_name: ${HOST_CUSTOMER_PEOPLE_SERVICE}
+    environment:
+      HOST_PG: ${HOST_PG}
+      PORT_PG: ${PORT_PG}
+      NAME_DB: ${NAME_DB}
+      USER_PG: ${USER_PG}
+      PASS_PG: ${PASS_PG}
+      DEFAULT_SCHEMA: ${DEFAULT_SCHEMA_PEOPLE}
+      TEST: TEST
+    ports:
+      - "8083:${PORT_CUSTOMER_PEOPLE_SERVICE}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - test-devsu-network
+volumes:
+  pgdata:
+  pgadmin-data:
+
+networks:
+  test-devsu-network:
+    driver: bridge

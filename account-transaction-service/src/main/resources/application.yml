@@ -1,0 +1,24 @@
+server:
+  port: 8082
+
+spring:
+  datasource:
+    url: jdbc:postgresql://${HOST_PG}:${PORT_PG}/${NAME_DB}
+    username: ${USER_PG}
+    password: ${PASS_PG}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: ${DEFAULT_SCHEMA} # {sch_accounts}
+        format_sql: true
+    show-sql: true
+
+people:
+  url: ${HOST_CUSTOMER_PEOPLE_SERVICE}:${PORT_CUSTOMER_PEOPLE_SERVICE}
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+    com.test.at.account_transaction_service: debug
